@@ -21,7 +21,7 @@ func (p TestPatch) Revert() error {
 var testOrd []string = []string{"0.1.0", "1.0.0", "1.7.3", "2.0.1", "64.3.2"}
 
 // versions are jumbled in this test to ensure failure case if patch list doesn't sort correctly.
-// testPatchListease don't do this in actual code!
+// Please don't do this in actual code!
 var testPatchList List = List{
 	testOrd[3]: TestPatch{nil},
 	testOrd[0]: TestPatch{nil},
