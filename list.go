@@ -20,7 +20,10 @@ func (pl List) Apply(cs version.Constraints) error {
 	}
 	for _, ver := range vers {
 		if cs.Check(ver) {
-			patch := pl[ver.String()]
+			patch, ok := pl[ver.String()]
+			if !ok {
+				return fmt.Errorf("unable to locate patch \"%s\"", ver.String())
+			}
 			if err := patch.Apply(); err != nil {
 				return err
 			}
@@ -67,7 +70,10 @@ func (pl List) Revert(cs version.Constraints) error {
 		i--
 		ver := vers[i]
 		if cs.Check(ver) {
-			patch := pl[ver.String()]
+			patch, ok := pl[ver.String()]
+			if !ok {
+				return fmt.Errorf("unable to locate patch \"%s\"", ver.String())
+			}
 			if err := patch.Revert(); err != nil {
 				return err
 			}
