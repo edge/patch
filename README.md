@@ -47,10 +47,12 @@ func main() {
 
 Expected output:
 
-> 1.0 install OK
-> install day zero patch
-> upgrade to 1.2 (rebalancing)
-> 2.0 update inc prepatches
+```
+1.0 install OK
+install day zero patch
+upgrade to 1.2 (rebalancing)
+2.0 update inc prepatches
+```
 
 ## Usage Notes
 

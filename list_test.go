@@ -20,7 +20,7 @@ func (p TestPatch) Revert() error {
 	return p.E
 }
 
-var testError = errors.New("no reason")
+var errNoReason = errors.New("no reason")
 
 var testOrd []string = []string{"0.1.0", "1.0.0", "1.7.3", "2.0.1", "64.3.2"}
 
@@ -40,7 +40,7 @@ func TestErrors(t *testing.T) {
 
 	patchList := List{
 		"1.5.3": TestPatch{nil},
-		"1.7.6": TestPatch{testError},
+		"1.7.6": TestPatch{errNoReason},
 	}
 
 	c, _ := version.NewConstraint("*")
@@ -50,7 +50,7 @@ func TestErrors(t *testing.T) {
 		if a.True(ok) {
 			a.True(patchErr.IsApply)
 			a.Equal("1.7.6", patchErr.InVersion.String())
-			a.Equal(testError, patchErr.OriginalError)
+			a.Equal(errNoReason, patchErr.OriginalError)
 		}
 	}
 
@@ -60,7 +60,7 @@ func TestErrors(t *testing.T) {
 		if a.True(ok) {
 			a.False(patchErr.IsApply)
 			a.Equal("1.7.6", patchErr.InVersion.String())
-			a.Equal(testError, patchErr.OriginalError)
+			a.Equal(errNoReason, patchErr.OriginalError)
 		}
 	}
 }
