@@ -25,7 +25,7 @@ func (pl List) Apply(cs version.Constraints) error {
 				return fmt.Errorf("unable to locate patch \"%s\"", ver.String())
 			}
 			if err := patch.Apply(); err != nil {
-				return err
+				return &Error{InVersion: ver, IsApply: true, OriginalError: err}
 			}
 		}
 	}
@@ -75,7 +75,7 @@ func (pl List) Revert(cs version.Constraints) error {
 				return fmt.Errorf("unable to locate patch \"%s\"", ver.String())
 			}
 			if err := patch.Revert(); err != nil {
-				return err
+				return &Error{InVersion: ver, IsApply: false, OriginalError: err}
 			}
 		}
 		if i == 0 {
