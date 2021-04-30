@@ -43,8 +43,7 @@ func TestErrors(t *testing.T) {
 		"1.7.6": TestPatch{errNoReason},
 	}
 
-	c, _ := version.NewConstraint("*")
-	err = patchList.Apply(c)
+	err = patchList.Apply()
 	if a.Error(err) {
 		patchErr, ok := err.(*Error)
 		if a.True(ok) {
@@ -54,7 +53,7 @@ func TestErrors(t *testing.T) {
 		}
 	}
 
-	err = patchList.Revert(c)
+	err = patchList.Revert()
 	if a.Error(err) {
 		patchErr, ok := err.(*Error)
 		if a.True(ok) {
@@ -73,6 +72,20 @@ func TestHighestVersion(t *testing.T) {
 		return
 	}
 	a.Equal("64.3.2", ver.String())
+}
+
+func TestPick(t *testing.T) {
+	a := assert.New(t)
+
+	c, _ := version.NewConstraint(">=1, <2")
+	picked, err := testPatchList.Pick(c)
+	if !a.Nil(err) {
+		return
+	}
+	vers, err := picked.Versions()
+	if a.Nil(err) {
+		a.Equal(2, len(vers))
+	}
 }
 
 func TestSortVersions(t *testing.T) {

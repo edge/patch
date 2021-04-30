@@ -13,20 +13,18 @@ import (
 type List map[string]Patch
 
 // Apply patches.
-func (pl List) Apply(cs version.Constraints) error {
+func (pl List) Apply() error {
 	vers, err := pl.Versions()
 	if err != nil {
 		return err
 	}
 	for _, ver := range vers {
-		if cs.Check(ver) {
-			patch, ok := pl[ver.String()]
-			if !ok {
-				return fmt.Errorf("unable to locate patch \"%s\"", ver.String())
-			}
-			if err := patch.Apply(); err != nil {
-				return &Error{InVersion: ver, IsApply: true, OriginalError: err}
-			}
+		patch, ok := pl[ver.String()]
+		if !ok {
+			return fmt.Errorf("unable to locate patch \"%s\"", ver.String())
+		}
+		if err := patch.Apply(); err != nil {
+			return &Error{InVersion: ver, IsApply: true, OriginalError: err}
 		}
 	}
 	return nil
@@ -41,13 +39,30 @@ func (pl List) HighestVersion() (*version.Version, error) {
 	return vers[len(vers)-1], nil
 }
 
-// Pick versions.
-func (pl List) Pick(cs version.Constraints) (version.Collection, error) {
+// Pick a new patch list that reflects given version constraints.
+func (pl List) Pick(cs version.Constraints) (List, error) {
+	pickList := List{}
+	vers, err := pl.PickVersions(cs)
+	if err != nil {
+		return pickList, err
+	}
+	for _, ver := range vers {
+		patch, ok := pl[ver.String()]
+		if !ok {
+			return pickList, fmt.Errorf("unable to locate patch \"%s\"", ver.String())
+		}
+		pickList[ver.String()] = patch
+	}
+	return pickList, nil
+}
+
+// PickVersions produces a list of versions matching the given constraints.
+func (pl List) PickVersions(cs version.Constraints) (version.Collection, error) {
+	picked := version.Collection{}
 	vers, err := pl.Versions()
 	if err != nil {
-		return vers, err
+		return picked, err
 	}
-	picked := version.Collection{}
 	for _, ver := range vers {
 		if cs.Check(ver) {
 			picked = append(picked, ver)
@@ -60,8 +75,8 @@ func (pl List) Pick(cs version.Constraints) (version.Collection, error) {
 }
 
 // Revert patches.
-func (pl List) Revert(cs version.Constraints) error {
-	vers, err := pl.Pick(cs)
+func (pl List) Revert() error {
+	vers, err := pl.Versions()
 	if err != nil {
 		return err
 	}
@@ -69,14 +84,12 @@ func (pl List) Revert(cs version.Constraints) error {
 	for {
 		i--
 		ver := vers[i]
-		if cs.Check(ver) {
-			patch, ok := pl[ver.String()]
-			if !ok {
-				return fmt.Errorf("unable to locate patch \"%s\"", ver.String())
-			}
-			if err := patch.Revert(); err != nil {
-				return &Error{InVersion: ver, IsApply: false, OriginalError: err}
-			}
+		patch, ok := pl[ver.String()]
+		if !ok {
+			return fmt.Errorf("unable to locate patch \"%s\"", ver.String())
+		}
+		if err := patch.Revert(); err != nil {
+			return &Error{InVersion: ver, IsApply: false, OriginalError: err}
 		}
 		if i == 0 {
 			break
