@@ -77,9 +77,6 @@ func (pl List) PickVersions(cs version.Constraints) (version.Collection, error) 
 			picked = append(picked, ver)
 		}
 	}
-	if len(picked) == 0 {
-		return picked, fmt.Errorf("no patches for %s", cs.String())
-	}
 	return picked, nil
 }
 
