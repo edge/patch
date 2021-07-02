@@ -83,7 +83,7 @@ func (pl List) Revert() error {
 }
 
 // RevertWithFunc reverts patches through a user-defined function.
-// This allows user code to act as middleware, log results etc.
+// This allows user code to intercept patches, log results etc.
 func (pl List) RevertWithFunc(f func(*version.Version, Patch) error) error {
 	vers, err := pl.Versions()
 	if err != nil {
