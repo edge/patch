@@ -9,20 +9,17 @@ import (
 )
 
 // List is a map of patches keyed by version number.
-// This makes it simple to coordinate any number of patches and ensure they run in a predictable order.
+// It will coordinates any number of patches and ensure they run in the correct order.
 type List map[string]Patch
-
-// Callback can be passed to List.ApplyWithCallback() or List.RevertWithCallback().
-type Callback func(*version.Version, Patch) error
 
 // Apply patches.
 func (pl List) Apply() error {
-	return pl.ApplyWithCallback(pl.applyPassthrough)
+	return pl.ApplyWithFunc(simpleApply)
 }
 
-// ApplyWithCallback applies patches through a callback function.
-// This allows user code to act as middleware, log results etc.
-func (pl List) ApplyWithCallback(cb Callback) error {
+// ApplyWithFunc applies patches through a user-defined function.
+// This allows user code to intercept patches, log results etc.
+func (pl List) ApplyWithFunc(f func(*version.Version, Patch) error) error {
 	vers, err := pl.Versions()
 	if err != nil {
 		return err
@@ -32,7 +29,7 @@ func (pl List) ApplyWithCallback(cb Callback) error {
 		if !ok {
 			return fmt.Errorf("unable to locate patch \"%s\"", ver.String())
 		}
-		if err := cb(ver, patch); err != nil {
+		if err := f(ver, patch); err != nil {
 			return &Error{InVersion: ver, IsApply: true, OriginalError: err}
 		}
 	}
@@ -82,12 +79,12 @@ func (pl List) PickVersions(cs version.Constraints) (version.Collection, error) 
 
 // Revert patches.
 func (pl List) Revert() error {
-	return pl.RevertWithCallback(pl.revertPassthrough)
+	return pl.RevertWithFunc(simpleRevert)
 }
 
-// RevertWithCallback reverts patches through a callback function.
+// RevertWithFunc reverts patches through a user-defined function.
 // This allows user code to act as middleware, log results etc.
-func (pl List) RevertWithCallback(cb Callback) error {
+func (pl List) RevertWithFunc(f func(*version.Version, Patch) error) error {
 	vers, err := pl.Versions()
 	if err != nil {
 		return err
@@ -100,7 +97,7 @@ func (pl List) RevertWithCallback(cb Callback) error {
 		if !ok {
 			return fmt.Errorf("unable to locate patch \"%s\"", ver.String())
 		}
-		if err := cb(ver, patch); err != nil {
+		if err := f(ver, patch); err != nil {
 			return &Error{InVersion: ver, IsApply: false, OriginalError: err}
 		}
 		if i == 0 {
@@ -131,10 +128,10 @@ func (pl List) Versions() ([]*version.Version, error) {
 	return vers, nil
 }
 
-func (pl List) applyPassthrough(_ *version.Version, patch Patch) error {
+func simpleApply(_ *version.Version, patch Patch) error {
 	return patch.Apply()
 }
 
-func (pl List) revertPassthrough(_ *version.Version, patch Patch) error {
+func simpleRevert(_ *version.Version, patch Patch) error {
 	return patch.Revert()
 }
